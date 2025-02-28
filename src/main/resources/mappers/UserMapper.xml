@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.green.greengram.user.UserMapper">
+
+    <insert id="insUser" useGeneratedKeys="true" keyProperty="userId">
+        INSERT INTO user
+           SET uid = #{uid}
+             , upw = #{upw}
+             , pic = #{pic}
+             , nick_name = #{nickName}
+    </insert>
+
+    <select id="selUserByUid">
+        SELECT user_id AS userId
+             , IFNULL(nick_name, uid) AS nickName
+             , pic, upw
+          FROM user
+         WHERE uid = #{uid}
+    </select>
+
+    <select id="selUserInfo">
+        SELECT A.user_id AS userId, A.pic, A.created_at AS createdAt
+             , IF(nick_name IS NULL, uid, nick_name) AS nickName
+             , IFNULL(D.feedCnt, 0) AS feedCnt
+             , IFNULL(D.likeCnt, 0) AS myFeedLikeCnt
+             , COUNT(DISTINCT B.from_user_id, B.to_user_id) AS `follower`
+             , COUNT(DISTINCT C.from_user_id, C.to_user_id) AS `following`
+             , MAX(DISTINCT if(B.from_user_id = #{signedUserId}, 1, 0))
+             + MAX(DISTINCT if(C.to_user_id = #{signedUserId}, 2, 0)) AS followState
+          FROM user A
+          LEFT JOIN (
+                SELECT H.writer_user_id
+                     , COUNT(DISTINCT H.feed_id) AS feedCnt
+                     , COUNT(I.user_id) AS likeCnt
+                  FROM feed H
+                  LEFT JOIN feed_like I
+                    ON H.feed_id = I.feed_id
+                 WHERE H.writer_user_id = #{profileUserId}
+          ) D
+           ON A.user_id = D.writer_user_id
+         LEFT JOIN user_follow B
+           ON A.user_id = B.to_user_id
+         LEFT JOIN user_follow C
+           ON A.user_id = C.from_user_id
+        WHERE A.user_id = #{profileUserId}
+
+    </select>
+
+    <select id="selUserInfo2">
+        SELECT A.user_id AS userId, A.pic, A.created_at AS createdAt
+             , IF(A.nick_name IS NULL, A.uid, A.nick_name) AS nickName
+             , COUNT(DISTINCT F1.from_user_id, F1.to_user_id) AS `follower`
+             , COUNT(DISTINCT F2.from_user_id, F2.to_user_id) AS `following`
+             , COUNT(DISTINCT F3.feed_id) AS feedCount
+             , COUNT(DISTINCT F4.feed_id, F4.user_id) AS myFeedLikeCount
+             , MAX(IF(F1.from_user_id = #{signedUserId}, 1, 0))
+             + MAX(IF(F2.to_user_id = #{signedUserId}, 2, 0)) AS followState
+          FROM user A
+          LEFT JOIN user_follow F1
+            ON A.user_id = F1.to_user_id  -- 프로필 사용자를 팔로잉한 다른 사용자
+          LEFT JOIN user_follow F2
+            ON A.user_id = F2.from_user_id -- 프로필 사용자가 팔로잉한 다른 사용자
+          LEFT JOIN feed F3
+            ON A.user_id = F3.writer_user_id -- 프로필 사용자가 작성한 피드
+          LEFT JOIN feed_like F4
+            ON F3.feed_id = F4.feed_id -- 프로필 사용자의 피드의 좋아요 정보
+         WHERE A.user_id = #{profileUserId}
+    </select>
+
+    <update id="updUserPic">
+        UPDATE user
+           SET pic = #{picName}
+         WHERE user_id = #{signedUserId}
+    </update>
+
+</mapper>

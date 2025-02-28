@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.green.greengram.feed.FeedMapper">
+
+    <insert id="insFeed" useGeneratedKeys="true" keyProperty="feedId">
+        INSERT INTO feed
+           SET writer_user_id = #{writerUserId}
+             , contents = #{contents}
+             , location = #{location}
+    </insert>
+
+    <select id="selFeedList">
+        SELECT A.feed_id AS feedId, A.contents, A.location
+             , A.created_at AS createdAt
+             , B.user_id AS writerUserId
+             , IF(B.nick_name IS NULL, B.uid, B.nick_name) AS writerNm
+             , B.pic AS writerPic
+             , IF(C.feed_id IS NULL, 0, 1) AS isLike
+          FROM feed A
+         INNER JOIN user B
+            ON A.writer_user_id = B.user_id
+          LEFT JOIN feed_like C
+            ON A.feed_id = C.feed_id
+           AND C.user_id = #{signedUserId}
+         <if test=" profileUserId != null ">
+             WHERE A.writer_user_id = #{profileUserId}
+         </if>
+         ORDER BY A.feed_id DESC
+         LIMIT #{startIdx}, #{size}
+    </select>
+
+    <select id="selFeedWithPicList">
+        SELECT T1.*, T2.pic
+        FROM (
+            SELECT A.feed_id AS feedId, A.contents, A.location
+                 , A.created_at AS createdAt
+                 , B.user_id AS writerUserId
+                 , IF(B.nick_name IS NULL, B.uid, B.nick_name) AS writerNm
+                 , B.pic AS writerPic
+                 , IF(C.feed_id IS NULL, 0, 1) AS isLike
+              FROM feed A
+             INNER JOIN user B
+                ON A.writer_user_id = B.user_id
+              LEFT JOIN feed_like C
+                ON A.feed_id = C.feed_id
+               AND C.user_id = #{signedUserId}
+               <if test=" profileUserId != null ">
+                   WHERE A.writer_user_id = #{profileUserId}
+               </if>
+             ORDER BY A.feed_id DESC
+             LIMIT #{startIdx}, #{size}
+        ) T1
+        INNER JOIN feed_pic T2
+           ON T1.feedId = T2.feed_id
+    </select>
+
+    <resultMap id="feedResultMap" type="com.green.greengram.feed.model.FeedWithPicCommentDto">
+        <id property="feedId" column="feedId" /> <!-- property는 객체의 멤버필드 이름, column은 쿼리의 컬럼명 -->
+        <result property="contents" column="contents" />
+        <result property="location" column="location" />
+        <result property="createdAt" column="createdAt" />
+        <result property="writerUserId" column="writerUserId" />
+        <result property="writerNm" column="writerNm" />
+        <result property="writerPic" column="writerPic" />
+        <result property="isLike" column="isLike" />
+        <collection property="pics" resultMap="feedPicResultMap" />
+        <collection property="commentList" resultMap="feedCommentResultMap" />
+    </resultMap>
+
+    <resultMap id="feedPicResultMap" type="String">
+        <id property="pic" column="pic" />
+    </resultMap>
+
+    <resultMap id="feedCommentResultMap" type="com.green.greengram.feed.comment.model.FeedCommentDto">
+        <id property="feedCommentId" column="feed_comment_id" />
+        <result property="comment" column="comment" />
+        <result property="writerUserId" column="commentWriterUserId" />
+        <result property="writerNm" column="commentWriterNm" />
+        <result property="writerPic" column="commentWriterPic" />
+    </resultMap>
+
+    <select id="selFeedWithPicAndCommentLimit4List" resultMap="feedResultMap">
+        SELECT T1.*, T2.pic, T3.*
+        FROM (
+            SELECT A.feed_id AS feedId, A.contents, A.location
+                 , A.created_at AS createdAt
+                 , B.user_id AS writerUserId
+                 , IF(B.nick_name IS NULL, B.uid, B.nick_name) AS writerNm
+                 , B.pic AS writerPic
+                 , IF(C.feed_id IS NULL, 0, 1) AS isLike
+              FROM feed A
+             INNER JOIN user B
+                ON A.writer_user_id = B.user_id
+              LEFT JOIN feed_like C
+                ON A.feed_id = C.feed_id
+               AND C.user_id = #{signedUserId}
+               <if test=" profileUserId != null ">
+                   WHERE A.writer_user_id = #{profileUserId}
+               </if>
+             ORDER BY A.feed_id DESC
+             LIMIT #{startIdx}, #{size}
+        ) T1
+       INNER JOIN feed_pic T2
+          ON T1.feedId = T2.feed_id
+        LEFT JOIN (
+            SELECT A.feed_id, A.feed_comment_id, A.`COMMENT`
+                 , C.user_id AS commentWriterUserId
+                 , IF(C.nick_name IS NULL, C.uid, C.nick_name) AS commentWriterNm
+                 , C.pic AS commentWriterPic
+              FROM feed_comment A
+              LEFT JOIN feed_comment B
+                ON A.feed_id = B.feed_id
+               AND A.feed_comment_id > B.feed_comment_id
+             INNER JOIN user C
+                ON A.user_id = C.user_id
+             GROUP BY A.feed_id, A.feed_comment_id, A.`COMMENT`
+            HAVING COUNT(A.feed_id) <![CDATA[ < ]]> 4
+        ) T3
+        ON T1.feedId = T3.feed_id
+    </select>
+
+    <delete id="delFeedLikeAndFeedCommentAndFeedPic">
+        DELETE B, C, D
+          FROM feed A
+          LEFT JOIN feed_like B
+            ON A.feed_id = B.feed_id
+          LEFT JOIN feed_comment C
+            ON A.feed_id = C.feed_id
+          LEFT JOIN feed_pic D
+            ON A.feed_id = D.feed_id
+         WHERE A.feed_id = #{feedId}
+           AND A.writer_user_id = #{signedUserId}
+    </delete>
+
+    <delete id="delFeed">
+        DELETE FROM feed
+         WHERE feed_id = #{feedId}
+           AND writer_user_id = #{signedUserId}
+    </delete>
+
+
+</mapper>

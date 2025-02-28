@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.green.greengram.feed.comment.FeedCommentMapper">
+
+    <!-- PK값 리턴 -->
+    <insert id="insFeedComment" useGeneratedKeys="true" keyProperty="feedCommentId">
+        INSERT INTO feed_comment
+           SET `feed_id` = #{feedId}
+             , `user_id` = #{userId}
+             , `comment` = #{comment}
+    </insert>
+
+    <select id="selFeedCommentList">
+        SELECT A.feed_comment_id AS feedCommentId
+             , A.comment
+             , B.user_id AS writerUserId
+             , IF(B.nick_name IS NULL, B.uid, B.nick_name) AS writerNm
+             , B.pic AS writerPic
+          FROM feed_comment A
+         INNER JOIN user B
+            ON A.user_id = B.user_id
+         WHERE A.feed_id = #{feedId}
+         ORDER BY A.feed_comment_id DESC
+         LIMIT #{startIdx}, #{size}
+    </select>
+
+    <select id="selFeedCommentListByFeedIdsLimit4">
+        SELECT T.feedId, T.feedCommentId, T.comment, T.writerUserId, T.writerNm, T.writerPic
+          FROM (
+            SELECT ROW_NUMBER() OVER (PARTITION BY A.feed_id ORDER BY A.feed_id, A.feed_comment_id DESC) AS num
+                 , A.feed_id AS feedId
+                 , A.feed_comment_id AS feedCommentId
+                 , A.comment
+                 , B.user_id AS writerUserId
+                 , IF(B.nick_name IS NULL, B.uid, B.nick_name) AS writerNm
+                 , B.pic AS writerPic
+            FROM feed_comment A
+            INNER JOIN user B
+            ON A.user_id = B.user_id
+            WHERE A.feed_id IN
+            <foreach collection="feedIds" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+          ) T
+        WHERE T.num <![CDATA[ <= ]]> 4
+    </select>
+
+
+    <select id="selFeedCommentListByFeedIdsLimit4Ver2">
+        SELECT T1.feed_id AS feedId
+             , T1.feed_comment_id AS feedCommentId
+             , T1.comment
+             , T2.user_id AS writerUserId
+             , IF(T2.nick_name IS NULL, T2.uid, T2.nick_name) AS writerNm
+             , T2.pic AS writerPic
+          FROM feed_comment T1
+         INNER JOIN user T2
+            ON T1.user_id = T2.user_id
+         WHERE T1.feed_id IN
+            <foreach collection="feedIds" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+           AND (
+                SELECT COUNT(feed_comment_id)
+                  FROM feed_comment S1
+                 WHERE T1.feed_id = S1.feed_id
+                   AND T1.feed_comment_id <![CDATA[ < ]]> S1.feed_comment_id
+           ) <![CDATA[ < ]]> 4
+         ORDER BY T1.feed_id, T1.feed_comment_id DESC
+    </select>
+
+    <delete id="delFeedComment">
+        DELETE FROM feed_comment
+         WHERE feed_comment_id = #{feedCommentId}
+           AND user_id = #{userId}
+    </delete>
+
+</mapper>
