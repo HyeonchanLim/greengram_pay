@@ -28,10 +28,19 @@ import org.springframework.context.annotation.Configuration;
 )
 @Configuration
 public class SwaggerConfiguration {
+
+    @Bean
+    public GroupedOpenApi groupAllApi() {
+        return GroupedOpenApi.builder()
+                .group("All") //Select a definition에 나타날 그룹 이름
+                .packagesToScan("com.green.greengram")
+                .build();
+    }
+
     @Bean
     public GroupedOpenApi groupGreengramApi() {
         return GroupedOpenApi.builder()
-                .group("Greengram")
+                .group("Greengram") //Select a definition에 나타날 그룹 이름
                 .pathsToMatch("/api/feed/**", "/api/user", "/api/user/pic", "/api/product/**")
                 .build();
     }

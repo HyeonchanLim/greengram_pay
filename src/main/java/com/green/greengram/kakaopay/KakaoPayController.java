@@ -2,6 +2,7 @@ package com.green.greengram.kakaopay;
 
 import com.green.greengram.config.model.ResultResponse;
 import com.green.greengram.kakaopay.model.KakaoPayApproveReq;
+import com.green.greengram.kakaopay.model.KakaoPayApproveRes;
 import com.green.greengram.kakaopay.model.KakaoPayReadyReq;
 import com.green.greengram.kakaopay.model.KakaoPayReadyRes;
 import io.swagger.v3.oas.annotations.Operation;
@@ -32,9 +33,13 @@ public class KakaoPayController {
 
     @GetMapping("approve")
     @Operation(summary = "카카오페이 결제승인 처리", description = "")
-    public void getApprove(HttpServletResponse response, @ParameterObject @ModelAttribute KakaoPayApproveReq req) throws IOException {
-        String redirectUrl = kakaoPayService.getApprove(req);
-        log.info("redirectUrl: {}", redirectUrl);
-        response.sendRedirect(redirectUrl);
+    public ResultResponse<KakaoPayApproveRes> getApprove(@ParameterObject @ModelAttribute KakaoPayApproveReq req) throws IOException {
+        KakaoPayApproveRes res = kakaoPayService.getApprove(req);
+        log.info("res: {}", res);
+
+        return ResultResponse.<KakaoPayApproveRes>builder()
+                .resultMessage("카카오페이 결제 완료")
+                .resultData(res)
+                .build();
     }
 }

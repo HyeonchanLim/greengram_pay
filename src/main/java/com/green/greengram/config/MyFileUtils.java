@@ -7,6 +7,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.UUID;
 
 @Slf4j
@@ -53,8 +55,14 @@ public class MyFileUtils {
 
     //파일을 원하는 경로에 저장
     public void transferTo(MultipartFile mf, String path) throws IOException {
-        File file = new File(uploadPath, path);
-        mf.transferTo(file);
+        File f = new File(uploadPath, path);
+        log.info("origin-file: {}", f.getAbsolutePath());
+
+        Path transPath = Paths.get(String.format("%s/%s", uploadPath, path)).toAbsolutePath();
+        log.info("transPath: {}", transPath.toString());
+        File file = transPath.toFile();
+        log.info("path-file: {}", file.getAbsolutePath());
+        mf.transferTo(transPath.toFile());
     }
 
     //폴더 삭제, e.g. "user/1"
