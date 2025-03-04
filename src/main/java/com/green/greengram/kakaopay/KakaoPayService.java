@@ -51,20 +51,26 @@ public class KakaoPayService {
                 // 연산하는 데이터 값 , BiFunction Implements 한 객체 주소 값 , 첫 번째 파라미터는 이전 리턴 값 , 두 번째 파라미터 스트림 자식 순차적으로 넘어옴
                 , Integer::sum); // 연산 결과 타입 설정
 
+        // DB insert 작업 준비
         User signedUser = User.builder()
                 .userId(authenticationFacade.getSignedUserId())
                 .build();
-
+        // OrderMaster 엔티티 객체화 (영속성이 없음) --- (a)라고 호칭
+        // 영속성이 있으면 insert -> update 로 바뀜
         OrderMaster orderMaster = OrderMaster.builder()
                 .user(signedUser)
                 .totalAmount(totalAmount)
                 .orderStatusCode(OrderStatusCode.READY)
                 .build();
 
-        for(Product item : productList) {
+        log.info("orderMaster - orderId : {}" , orderMaster.getOrderId()); // null
+
+        for(Product item : productList) { // DB 에서 가져온 productList 를 향상된 for문 처리
+            // OrderProduct 엔티티는 복합키로 구성 (orderId + productId) , OrderProductIds 객체화 --- (b) 라고 호칭
             OrderProductIds ids = OrderProductIds.builder()
-                    .orderId(item.getProductId())
+                    .productId(item.getProductId()) // orderId 값을 넣을 수 없다. 왜냐면 아직 (a)가 insert 전이기 때문에
                     .build();
+            // OrderProduct 엔티티 객체화 (영속성이 없음) --- (c) 라고 호칭
             OrderProduct orderProduct = OrderProduct.builder()
                     .ids(ids)
                     .product(item)
@@ -72,10 +78,11 @@ public class KakaoPayService {
                     .unitPrice(item.getProductPrice())
                     .build();
 
-            orderMaster.addOrderProduct(orderProduct);
+            orderMaster.addOrderProduct(orderProduct); // 양방향 연결 (a) , (c) 연결 , (a) <-> (c) 서로 알아야 한다.
         }
 
         orderMasterRepository.save(orderMaster);
+        orderMasterRepository.flush(); // insert 체크
 
         // 결제 준비 단계
         /*
@@ -99,7 +106,7 @@ public class KakaoPayService {
                 .quantity(productList.size())
                 .totalAmount(totalAmount)
                 .taxFreeAmount(0)
-                .approvalUrl(constKakaoPay.getApprovalUrl())
+                .approvalUrl(constKakaoPay.getApprovalUrl()) // 준비가 제대로 되면 redirect 주소값 
                 .failUrl(constKakaoPay.getFailUrl())
                 .cancelUrl(constKakaoPay.getCancelUrl())
                 .build();

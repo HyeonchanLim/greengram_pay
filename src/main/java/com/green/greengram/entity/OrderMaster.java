@@ -44,7 +44,7 @@ public class OrderMaster extends UpdatedAt {
 
     // 양방향 관계를 유지하기 위해 helper 메소드 추가
     public void addOrderProduct(OrderProduct orderProduct) {
-        orderProductList.add(orderProduct);
+        orderProductList.add(orderProduct); // 자식 (OrderProduct) 주소값 추가
         orderProduct.setOrderMaster(this);
     }
 }
