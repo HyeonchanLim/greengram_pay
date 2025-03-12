@@ -25,7 +25,7 @@ public class WebSecurityConfig {
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
     //OAuth2
-    private final Oauth2AuthenticationCheckRedirectUriFilter oauth2AuthenticationCheckRedirectUriFilter;
+//    private final Oauth2AuthenticationCheckRedirectUriFilter oauth2AuthenticationCheckRedirectUriFilter;
     private final Oauth2AuthenticationRequestBasedOnCookieRepository repository;
     private final Oauth2AuthenticationSuccessHandler oauth2AuthenticationSuccessHandler;
     private final Oauth2AuthenticationFailureHandler oauth2AuthenticationFailureHandler;
@@ -59,7 +59,7 @@ public class WebSecurityConfig {
                                               .userInfoEndpoint( userInfo -> userInfo.userService(myOauth2UserService) )
                                               .successHandler(oauth2AuthenticationSuccessHandler)
                                               .failureHandler(oauth2AuthenticationFailureHandler) )
-                .addFilterBefore(oauth2AuthenticationCheckRedirectUriFilter, OAuth2AuthorizationRequestRedirectFilter.class)
+                .addFilterBefore(new Oauth2AuthenticationCheckRedirectUriFilter(constOAuth2), OAuth2AuthorizationRequestRedirectFilter.class)
                 .build();
     }
 

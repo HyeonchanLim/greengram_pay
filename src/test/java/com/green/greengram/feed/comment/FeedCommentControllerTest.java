@@ -8,8 +8,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.util.LinkedMultiValueMap;
@@ -29,7 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class FeedCommentControllerTest {
     @Autowired ObjectMapper objectMapper; //JSON사용
     @Autowired MockMvc mockMvc; //요청(보내고)-응답(받기) 처리
-    @MockBean FeedCommentService feedCommentService;
+    @MockitoBean FeedCommentService feedCommentService;
 
     final long feedId_2 = 2L;
     final long feedCommentId_3 = 3L;

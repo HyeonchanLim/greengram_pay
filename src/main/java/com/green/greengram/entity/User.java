@@ -25,7 +25,7 @@ public class User extends UpdatedAt {
     @GeneratedValue(strategy = GenerationType.IDENTITY) //auto_increment
     private Long userId; // user_id
 
-    @Column(nullable = false)
+    @Column(nullable = false,length = 2)
     private SignInProviderType providerType;
 
     @Column(nullable = false, length = 30)

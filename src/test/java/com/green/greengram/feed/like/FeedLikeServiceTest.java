@@ -47,7 +47,7 @@ class FeedLikeServiceTest {
 
         FeedLikeReq actualParam = new FeedLikeReq();
         actualParam.setFeedId(FEED_ID_8);
-        int actualResult = feedLikeService.feedLikeToggle(actualParam);
+        int actualResult = feedLikeService.feedLikeToggle(FEED_ID_7);
 
         assertEquals(1, actualResult);
     }
@@ -62,7 +62,7 @@ class FeedLikeServiceTest {
 
         FeedLikeReq actualParam = new FeedLikeReq();
         actualParam.setFeedId(FEED_ID_7);
-        int actualResult = feedLikeService.feedLikeToggle(actualParam);
+        int actualResult = feedLikeService.feedLikeToggle(FEED_ID_7);
 
         assertEquals(0, actualResult);
     }

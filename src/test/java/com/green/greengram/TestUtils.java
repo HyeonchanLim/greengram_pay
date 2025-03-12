@@ -15,4 +15,9 @@ public class TestUtils {
         LocalDateTime actualNow = LocalDateTime.parse(dateTime, formatter);
         assertTrue(Duration.between(expectedNow, actualNow).getSeconds() <= 1);
     }
+    public static void assertCurrentTimestamp(LocalDateTime dateTime) {
+        //자바에서 현재일시 데이터
+        LocalDateTime expectedNow = LocalDateTime.now();//2024-12-30T11:32:23
+        assertTrue(Duration.between(expectedNow, dateTime).getSeconds() <= 1);
+    }
 }

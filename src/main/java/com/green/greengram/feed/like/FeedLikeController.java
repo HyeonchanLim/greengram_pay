@@ -19,9 +19,9 @@ public class FeedLikeController {
 
     @GetMapping
     @Operation(summary = "피드 좋아요", description = "토글 처리")
-    public ResultResponse<Integer> feedLikeToggle(@ParameterObject @ModelAttribute FeedLikeReq p) {
-        log.info("FeedLikeController > feedLikeToggle > p: {}", p);
-        int result = service.feedLikeToggle(p);
+    public ResultResponse<Integer> feedLikeToggle(@RequestParam Long feedId) {
+        log.info("FeedLikeController > feedLikeToggle > p: {}", feedId);
+        int result = service.feedLikeToggle(feedId);
         return ResultResponse.<Integer>builder()
                 .resultMessage(result == 0 ? "좋아요 취소" : "좋아요 등록")
                 .resultData(result)
